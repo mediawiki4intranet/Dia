@@ -1,0 +1,46 @@
+--------------------------------------------------------------------------
+README for the Dia extension
+Copyright © 2007 Marcel Toele
+Licenses: GNU General Public Licence (GPL) v2.0 or up
+          GNU Free Documentation License (GFDL)
+--------------------------------------------------------------------------
+
+Description     Allows Dia diagrams to be rendered inside MediaWiki pages.
+Author(s)       EleotleCram
+MediaWiki       1.9 (maybe older versions too)
+
+Installing
+
+Copy the Dia directory into the extensions folder of your MediaWiki installation. Then add the following lines to your LocalSettings.php file (near the end):
+
+require_once( "$IP/extensions/Dia/Dia.php" );
+
+Configuration
+
+$wgDIANominalSize
+    The nominal width of a Dia file when rendered to png (default: 300px).
+
+$wgDIAMaxSize
+    Don't scale a Dia file larger than this (default: 1024px).
+
+Advanced Configuration
+
+Dia diagrams may be uploaded as drawings. these diagrams are converted to png before they can be rendered on a page. An external program is required to perform this conversion. By default 'dia' itself is used to perform this conversion, but if you have a different tool to perform the conversion you can set it up here.
+
+$wgDIAConverters
+    An associative array linking your conversion tool (as key) with the commandline to be used for your tool. In this commandline you can use the following variables:
+
+    * $input: The input filename
+    * $output: The output filename
+    * $width: The output width
+
+$wgDIAConverter
+    The currently selected converter (default: 'dia').
+$wgDIAConverterPath
+    If the currently selected converter is not in the default PATH environment variable, you can set the path here.
+
+Note: Future versions of the extension may also output SVG.
+
+History
+
+    * 20071031 Initial version.
