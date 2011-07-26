@@ -49,3 +49,5 @@ $wgDIAMaxSize = 1024;
 $wgMediaHandlers['application/x-dia-diagram'] = 'DiaHandler';
 $wgAutoloadClasses['DiaHandler'] = dirname(__FILE__) . '/Dia.body.php';
 $wgExtensionMessagesFiles['Dia'] = dirname(__FILE__) . '/Dia.i18n.php';
+if (!in_array('dia', $wgFileExtensions))
+    $wgFileExtensions[] = 'dia';
