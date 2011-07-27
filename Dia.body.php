@@ -4,7 +4,7 @@ function wfGetDIAsize($filename)
 {
     global $wgDIANominalSize;
 
-    $xmlstr = file_get_contents($filename);
+    $xmlstr = file_get_contents('compress.zlib://'.$filename);
     $xmlstr = str_replace("<dia:", "<", $xmlstr);
     $xmlstr = str_replace("</dia:", "</", $xmlstr);
 
