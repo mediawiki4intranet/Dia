@@ -45,6 +45,67 @@ function wfGetDIAsize($filename)
     return $res;
 }
 
+class DiaSvgThumbnailImage extends ThumbnailImage
+{
+    function DiaSvgThumbnailImage( $file, $url, $svgurl, $width, $height, $path = false, $page = false )
+    {
+        $this->svgurl = $svgurl;
+        $this->ThumbnailImage( $file, $url, $width, $height, $path, $page );
+    }
+    function toHtml( $options = array() )
+    {
+        if ( count( func_get_args() ) == 2 ) {
+            throw new MWException( __METHOD__ .' called in the old style' );
+        }
+
+        $alt = empty( $options['alt'] ) ? '' : $options['alt'];
+        $query = empty( $options['desc-query'] )  ? '' : $options['desc-query'];
+
+        if ( !empty( $options['custom-url-link'] ) ) {
+            $linkAttribs = array( 'href' => $options['custom-url-link'] );
+            if ( !empty( $options['title'] ) ) {
+                $linkAttribs['title'] = $options['title'];
+            }
+        } elseif ( !empty( $options['custom-title-link'] ) ) {
+            $title = $options['custom-title-link'];
+            $linkAttribs = array(
+                'href' => $title->getLinkUrl(),
+                'title' => empty( $options['title'] ) ? $title->getFullText() : $options['title']
+            );
+        } elseif ( !empty( $options['desc-link'] ) ) {
+            $linkAttribs = $this->getDescLinkAttribs( empty( $options['title'] ) ? null : $options['title'], $query );
+        } elseif ( !empty( $options['file-link'] ) ) {
+            $linkAttribs = array( 'href' => $this->file->getURL() );
+        } else {
+            $linkAttribs = false;
+        }
+
+        $attribs = array(
+            'alt' => $alt,
+            'src' => $this->url,
+            'width' => $this->width,
+            'height' => $this->height,
+        );
+        if ( !empty( $options['valign'] ) ) {
+            $attribs['style'] = "vertical-align: {$options['valign']}";
+        }
+        if ( !empty( $options['img-class'] ) ) {
+            $attribs['class'] = $options['img-class'];
+        }
+
+        // Output PNG <img> wrapped into SVG <object>
+        $html = $this->linkWrap( $linkAttribs, Xml::element( 'img', $attribs ) );
+        $html = Xml::tags( 'object', array(
+            'type' => 'image/svg+xml',
+            'data' => $this->svgurl,
+            'style' => 'overflow: hidden',
+            'width' => $this->width,
+            'height' => $this->height,
+        ), $html );
+        return $html;
+    }
+}
+
 /**
  * @addtogroup Media
  */
@@ -104,7 +165,7 @@ class DiaHandler extends ImageHandler
         $srcPath = $image->getPath();
 
         if ($flags & self::TRANSFORM_LATER)
-            return new ThumbnailImage($image, $dstUrl, $clientWidth, $clientHeight, $dstPath);
+            return new DiaSvgThumbnailImage($image, $dstUrl, $dstUrl.'.svg', $clientWidth, $clientHeight, $dstPath);
 
         if (!wfMkdirParents(dirname($dstPath)))
         {
@@ -115,19 +176,35 @@ class DiaHandler extends ImageHandler
         }
 
         $err = false;
-        if (isset($wgDIAConverters[$wgDIAConverter]))
+        if ($conv = $wgDIAConverters[$wgDIAConverter])
         {
-            $cmd = str_replace(
-                array('$path/', '$width', '$height', '$input', '$output'),
-                array($wgDIAConverterPath ? wfEscapeShellArg("$wgDIAConverterPath/") : "",
-                       intval($physicalWidth),
-                       intval($physicalHeight),
-                       wfEscapeShellArg($srcPath),
-                       wfEscapeShellArg($dstPath)),
-                $wgDIAConverters[$wgDIAConverter]) . " 2>&1";
+            $repl = array(
+                '$path/'  => $wgDIAConverterPath ? wfEscapeShellArg("$wgDIAConverterPath/") : "",
+                '$width'  => intval($physicalWidth),
+                '$height' => intval($physicalHeight),
+                '$input'  => wfEscapeShellArg($srcPath),
+                '$output' => wfEscapeShellArg($dstPath),
+                '$type'   => 'png',
+            );
+            $cmd = str_replace(array_keys($repl), array_values($repl), $conv) . " 2>&1";
             wfProfileIn('dia');
             wfDebug(__METHOD__.": $cmd\n");
             $err = wfShellExec($cmd, $retval);
+            if ($retval == 0)
+            {
+                $repl['$output'] = wfEscapeShellArg($dstPath.'.svg');
+                $repl['$type'] = 'svg';
+                $cmd = str_replace(array_keys($repl), array_values($repl), $conv) . " 2>&1";
+                $err = wfShellExec($cmd, $retval);
+                if ($retval == 0)
+                {
+                    // Ugly hack: replace font-size units with pixels
+                    // Without it, fonts in Dia SVG are too big
+                    $svg = file_get_contents($dstPath.'.svg');
+                    $svg = preg_replace('/(font-size:[\d\.]+)(?!\w)/', '\1px', $svg);
+                    file_put_contents($dstPath.'.svg', $svg);
+                }
+            }
             wfProfileOut('dia');
         }
 
@@ -140,7 +217,7 @@ class DiaHandler extends ImageHandler
             return new MediaTransformError('thumbnail_error', $clientWidth, $clientHeight, $err);
         }
         else
-            return new ThumbnailImage($image, $dstUrl, $clientWidth, $clientHeight, $dstPath);
+            return new DiaSvgThumbnailImage($image, $dstUrl, $dstUrl.'.svg', $clientWidth, $clientHeight, $dstPath);
     }
 
     function getImageSize($image, $path)

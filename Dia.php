@@ -34,7 +34,7 @@ $wgExtensionCredits['other'][] = array(
 // An external program is required to perform this conversion:
 $wgDIAConverters = array(
     // dia -n -e testdiagram.png -t png -s 100 testdiagram.dia
-    'dia' => '$path/dia -n -e $output -t png -s $width $input',
+    'dia' => '$path/dia -n -e $output -t $type -s $width $input',
 );
 // Pick one of the above
 $wgDIAConverter = 'dia';
