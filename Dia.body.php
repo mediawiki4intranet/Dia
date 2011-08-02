@@ -196,10 +196,12 @@ class DiaHandler extends ImageHandler
                 $repl['$type'] = 'svg';
                 $cmd = str_replace(array_keys($repl), array_values($repl), $conv) . " 2>&1";
                 $err = wfShellExec($cmd, $retval);
-                if ($retval == 0)
+                if ($retval == 0 && 0)
                 {
                     // Ugly hack: replace font-size units with pixels
-                    // Without it, fonts in Dia SVG are too big
+                    // Without it, fonts in Dia SVG are rendered too big in some browsers
+                    // (Opera, Firefox 4)
+                    // FIXME this hack needs to be removed in the future
                     $svg = file_get_contents($dstPath.'.svg');
                     $svg = preg_replace('/(font-size:[\d\.]+)(?!\w)/', '\1px', $svg);
                     file_put_contents($dstPath.'.svg', $svg);
