@@ -47,10 +47,10 @@ function wfGetDIAsize($filename)
 
 class DiaSvgThumbnailImage extends ThumbnailImage
 {
-    function DiaSvgThumbnailImage( $file, $url, $svgurl, $width, $height, $path = false, $page = false )
+    function __construct( $file, $url, $svgurl, $width, $height, $path = false, $page = false )
     {
         $this->svgurl = $svgurl;
-        $this->ThumbnailImage( $file, $url, $width, $height, $path, $page );
+        parent::__construct( $file, $url, $width, $height, $path, $page );
     }
     function toHtml( $options = array() )
     {
