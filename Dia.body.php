@@ -235,7 +235,6 @@ class DiaHandler extends ImageHandler
     function getLongDesc($file)
     {
         global $wgLang;
-        wfLoadExtensionMessages('Dia');
         return wfMsg(
             'dia-long-desc', $file->getWidth(), $file->getHeight(),
             $wgLang->formatSize($file->getSize())
