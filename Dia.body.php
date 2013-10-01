@@ -227,7 +227,7 @@ class DiaHandler extends ImageHandler
         return wfGetDIAsize($path);
     }
 
-    function getThumbType($ext, $mime)
+    function getThumbType($ext, $mime, $params = NULL)
     {
         return array('png', 'image/png');
     }
