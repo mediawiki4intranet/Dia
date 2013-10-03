@@ -162,7 +162,7 @@ class DiaHandler extends ImageHandler
         $clientHeight = $params['height'];
         $physicalWidth = $params['physicalWidth'];
         $physicalHeight = $params['physicalHeight'];
-        $srcPath = $image->getPath();
+        $srcPath = method_exists( $image, 'getLocalRefPath' ) ? $image->getLocalRefPath() : $image->getPath();
 
         if ($flags & self::TRANSFORM_LATER)
             return new DiaSvgThumbnailImage($image, $dstUrl, $dstUrl.'.svg', $clientWidth, $clientHeight, $dstPath);
