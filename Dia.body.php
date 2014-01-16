@@ -2,8 +2,6 @@
 
 function wfGetDIAsize($filename)
 {
-    global $wgDIANominalSize;
-
     $xmlstr = file_get_contents('compress.zlib://'.$filename);
     $xmlstr = str_replace("<dia:", "<", $xmlstr);
     $xmlstr = str_replace("</dia:", "</", $xmlstr);
@@ -32,17 +30,15 @@ function wfGetDIAsize($filename)
             $ymax = $y2;
     }
 
+    // centimeters
     $width = $xmax - $xmin;
     $height = $ymax - $ymin;
 
-    $aspect = $width / $height;
+    // convert to pixels
+    $width = round($width*19.981);
+    $height = round($height*19.981);
 
-    $nominal_width = $wgDIANominalSize;
-    $nominal_height = (int)($nominal_width / $aspect);
-
-    $res = array($nominal_width, $nominal_height);
-
-    return $res;
+    return array($width, $height);
 }
 
 class DiaSvgThumbnailImage extends ThumbnailImage
@@ -52,6 +48,7 @@ class DiaSvgThumbnailImage extends ThumbnailImage
         $this->svgurl = $svgurl;
         parent::__construct( $file, $url, $width, $height, $path, $page );
     }
+
     function toHtml( $options = array() )
     {
         if ( count( func_get_args() ) == 2 ) {
@@ -136,8 +133,9 @@ class DiaHandler extends ImageHandler
     {
         global $wgDIAMaxSize;
         if (!parent::normaliseParams($image, $params))
+        {
             return false;
-
+        }
         // Don't make an image bigger than wgMaxDIASize
         $params['physicalWidth'] = $params['width'];
         $params['physicalHeight'] = $params['height'];
@@ -156,16 +154,20 @@ class DiaHandler extends ImageHandler
         global $wgDIAConverters, $wgDIAConverter, $wgDIAConverterPath;
 
         if (!$this->normaliseParams($image, $params))
+        {
             return new TransformParameterError($params);
+        }
 
         $clientWidth = $params['width'];
         $clientHeight = $params['height'];
         $physicalWidth = $params['physicalWidth'];
         $physicalHeight = $params['physicalHeight'];
-        $srcPath = method_exists( $image, 'getLocalRefPath' ) ? $image->getLocalRefPath() : $image->getPath();
+        $srcPath = method_exists($image, 'getLocalRefPath') ? $image->getLocalRefPath() : $image->getPath();
 
         if ($flags & self::TRANSFORM_LATER)
-            return new DiaSvgThumbnailImage($image, $dstUrl, $dstUrl.'.svg', $clientWidth, $clientHeight, $dstPath);
+        {
+            return new DiaSvgThumbnailImage($image, $dstUrl, substr($dstUrl, 0, -4).'.svg', $clientWidth, $clientHeight, $dstPath);
+        }
 
         if (!wfMkdirParents(dirname($dstPath)))
         {
@@ -176,7 +178,8 @@ class DiaHandler extends ImageHandler
         }
 
         $err = false;
-        if ($conv = $wgDIAConverters[$wgDIAConverter])
+        $conv = $wgDIAConverters[$wgDIAConverter];
+        if ($conv)
         {
             $repl = array(
                 '$path/'  => $wgDIAConverterPath ? wfEscapeShellArg("$wgDIAConverterPath/") : "",
@@ -196,15 +199,22 @@ class DiaHandler extends ImageHandler
                 $repl['$type'] = 'svg';
                 $cmd = str_replace(array_keys($repl), array_values($repl), $conv) . " 2>&1";
                 $err = wfShellExec($cmd, $retval);
-                if ($retval == 0 && 0)
+                if ($retval == 0)
                 {
-                    // Ugly hack: replace font-size units with pixels
-                    // Without it, fonts in Dia SVG are rendered too big in some browsers
-                    // (Opera, Firefox 4)
-                    // FIXME this hack needs to be removed in the future
-                    $svg = file_get_contents($dstPath.'.svg');
-                    $svg = preg_replace('/(font-size:[\d\.]+)(?!\w)/', '\1px', $svg);
-                    file_put_contents($dstPath.'.svg', $svg);
+                    if (0)
+                    {
+                        // Ugly hack: replace font-size units with pixels
+                        // Without it, fonts in Dia SVG are rendered too big in some browsers
+                        // (Opera, Firefox 4)
+                        // FIXME this hack needs to be removed in the future
+                        $svg = file_get_contents($dstPath.'.svg');
+                        $svg = preg_replace('/(font-size:[\d\.]+)(?!\w)/', '\1px', $svg);
+                        file_put_contents($dstPath.'.svg', $svg);
+                    }
+                    // Maybe TODO: Dia generates the same .svg for all image sizes
+                    $svgName = $image->thumbName($params + array('svg' => true));
+                    $svgPath = $image->getThumbPath($svgName);
+                    $status = $image->repo->quickImport($dstPath.'.svg', $svgPath, $image->getThumbDisposition($svgName));
                 }
             }
             wfProfileOut('dia');
@@ -218,8 +228,7 @@ class DiaHandler extends ImageHandler
                     wfHostname(), $retval, trim($err), $cmd));
             return new MediaTransformError('thumbnail_error', $clientWidth, $clientHeight, $err);
         }
-        else
-            return new DiaSvgThumbnailImage($image, $dstUrl, $dstUrl.'.svg', $clientWidth, $clientHeight, $dstPath);
+        return new DiaSvgThumbnailImage($image, $dstUrl, substr($dstUrl, 0, -4).'.svg', $clientWidth, $clientHeight, $dstPath);
     }
 
     function getImageSize($image, $path)
@@ -229,6 +238,10 @@ class DiaHandler extends ImageHandler
 
     function getThumbType($ext, $mime, $params = NULL)
     {
+        if (!empty($params['svg']))
+        {
+            return array('svg', 'image/svg+xml');
+        }
         return array('png', 'image/png');
     }
 

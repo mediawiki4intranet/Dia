@@ -1,0 +1,48 @@
+== Dia extension for MediaWiki ==
+
+* Authors: (c) 2007 Marcel Toele (EleotleCram), (c) 2011+ Vitaliy Filippov
+* License: GNU General Public Licence (GPL) v2.0 or later
+* Description: Allows Dia diagrams to be rendered inside MediaWiki pages.
+* MediaWiki: 1.16+
+
+== Installation ==
+
+* Install Dia on your MediaWiki server.
+* Copy extension files to extensions/Dia directory of your MediaWiki installation.
+* Add the following line to your LocalSettings.php file:
+<pre>
+require_once("$IP/extensions/Dia/Dia.php");
+</pre>
+* To handle gzipped dia files (they are also .dia), apply a patch to MediaWiki core. It will also enable gzipped SVG support (.svgz). Note the patch is only compatible with MediaWiki 1.21.
+<pre>
+cd <installation_path>
+patch -p1 < extensions/Dia/gzipped-xml-types-1.21.diff
+</pre>
+
+== Usage ==
+
+After installation, Dia diagrams may be uploaded and used as normal images in your wiki
+(make sure you have <tt>$wgEnableUploads = true;</tt>), for example: <tt><nowiki>[[File:Test.dia|500px]]</nowiki></tt>.
+They are rendered as SVG+PNG pairs on pages; browsers that can't show SVG will fall back to PNG.
+
+An external program (Dia itself by default) is required to perform this conversion.
+
+== Configuration ==
+
+* $wgDIAMaxSize: Don't scale a Dia file larger than this value in pixels (default: 1024).
+
+The following usually shouldn't be changed at all:
+
+; $wgDIAConverters: An associative array linking your conversion tool (as key) with the commandline to be used for your tool. In this commandline you can use the following variables:
+:* $input: The input filename
+:* $output: The output filename
+:* $width: The output width
+:* $type: Thumbnail type
+; $wgDIAConverter: The currently selected converter (default: 'dia').
+; $wgDIAConverterPath: If the currently selected converter is not in the default PATH environment variable, you can set the path here.
+
+== History ==
+
+* 2014-01-16: Drop ancient MediaWiki (1.15 and below) support, do not force nominal diagram size.
+* 2011-07-27: SVG+PNG rendering, gzipped Dia support.
+* 2007-10-31: Initial version.

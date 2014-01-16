@@ -1,14 +1,16 @@
 <?php
 /**
- * Setup for Dia extension, an extension that allows Dia (http://live.gnome.org/Dia) diagrams
- * to be rendered in MediaWiki pages.
- * Fixed for 1.16 + reformatted by Vitaliy Filippov, http://wiki.4intra.net/
+ * Setup for Dia media handler, an extension that allows Dia (http://live.gnome.org/Dia)
+ * diagrams to be rendered in MediaWiki pages.
+ *
+ * Supports SVG rendering and MediaWiki 1.16+.
+ * Gzipped Dia file support needs a patch to MediaWiki core.
  *
  * @package MediaWiki
  * @subpackage Extensions
- * @author Marcel Toele, dwarfhouse.org
- * @copyright © 2007 Marcel Toele
- * @licence GNU General Public Licence 2.0 or later
+ * @author Marcel Toele (http://dwarfhouse.org), Vitaliy Filippov (http://wiki.4intra.net)
+ * @copyright © 2007 Marcel Toele, © 2011+ Vitaliy Filippov
+ * @licence GNU General Public License 2.0 or later
  */
 
 if (!defined('MEDIAWIKI'))
@@ -20,8 +22,8 @@ if (!defined('MEDIAWIKI'))
 // Credits
 $wgExtensionCredits['other'][] = array(
     'name'        => 'Dia',
-    'author'      => 'Marcel Toele',
-    'url'         => 'http://mediawiki.org/wiki/Extension:Dia',
+    'author'      => 'Marcel Toele, Vitaliy Filippov',
+    'url'         => 'http://wiki.4intra.net/Dia',
     'description' => 'Allows Dia diagrams to be rendered inside MediaWiki pages.',
 );
 
@@ -40,14 +42,14 @@ $wgDIAConverters = array(
 $wgDIAConverter = 'dia';
 // If not in the executable PATH, specify
 $wgDIAConverterPath = '';
-// The nominal width of a Dia file when rendered to png
-$wgDIANominalSize = 300;
 // Don't scale a Dia file larger than this
 $wgDIAMaxSize = 1024;
 
 // Add the DiaHandler via the Autoload mechanism.
 $wgMediaHandlers['application/x-dia-diagram'] = 'DiaHandler';
-$wgAutoloadClasses['DiaHandler'] = dirname(__FILE__) . '/Dia.body.php';
-$wgExtensionMessagesFiles['Dia'] = dirname(__FILE__) . '/Dia.i18n.php';
+$wgAutoloadClasses['DiaHandler'] = __DIR__ . '/Dia.body.php';
+$wgExtensionMessagesFiles['Dia'] = __DIR__ . '/Dia.i18n.php';
 if (!in_array('dia', $wgFileExtensions))
+{
     $wgFileExtensions[] = 'dia';
+}
