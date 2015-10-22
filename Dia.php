@@ -50,6 +50,5 @@ $wgMediaHandlers['application/x-dia-diagram'] = 'DiaHandler';
 $wgAutoloadClasses['DiaHandler'] = __DIR__ . '/Dia.body.php';
 $wgExtensionMessagesFiles['Dia'] = __DIR__ . '/Dia.i18n.php';
 if (!in_array('dia', $wgFileExtensions))
-{
     $wgFileExtensions[] = 'dia';
-}
+$wgXMLMimeTypes['http://www.lysator.liu.se/~alla/dia/:diagram'] = 'application/x-dia-diagram';
