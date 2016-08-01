@@ -173,7 +173,7 @@ class DiaHandler extends ImageHandler
         {
             return new MediaTransformError(
                 'thumbnail_error', $clientWidth, $clientHeight,
-                wfMsg('thumbnail_dest_directory')
+                wfMessage('thumbnail_dest_directory')->text()
             );
         }
 
@@ -248,9 +248,9 @@ class DiaHandler extends ImageHandler
     function getLongDesc($file)
     {
         global $wgLang;
-        return wfMsg(
+        return wfMessage(
             'dia-long-desc', $file->getWidth(), $file->getHeight(),
             $wgLang->formatSize($file->getSize())
-        );
+        )->text();
     }
 }
