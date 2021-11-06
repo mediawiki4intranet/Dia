@@ -128,7 +128,6 @@ class DiaHandler extends ImageHandler
                 '$type'   => 'png',
             );
             $cmd = str_replace(array_keys($repl), array_values($repl), $conv) . " 2>&1";
-            wfProfileIn('dia');
             wfDebug(__METHOD__.": $cmd\n");
             $err = wfShellExec($cmd, $retval);
             if ($retval == 0)
@@ -145,7 +144,6 @@ class DiaHandler extends ImageHandler
                     $status = $image->repo->quickImport($dstPath.'.svg', $svgPath, $image->getThumbDisposition($svgName));
                 }
             }
-            wfProfileOut('dia');
         }
 
         $removed = $this->removeBadFile($dstPath, $retval);
